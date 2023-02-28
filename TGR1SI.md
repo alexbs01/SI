@@ -18,7 +18,7 @@ El 8-puzzle consiste en un tablero de 3x3 con ocho fichas numeradas y un espacio
 
 - **Modelo de transiciones**
 
-| Acción          | Precondicion                       | Resultado                         |
+| Acción          | Precondición                       | Resultado                         |
 | --------------- | ---------------------------------- | --------------------------------- |
 | Mover arriba    | Debe estar el hueco arriba         | Intercambiar casilla con el hueco |
 | Mover abajo     | Debe estar el hueco abajo          | Intercambiar casilla con el hueco |
@@ -28,9 +28,49 @@ El 8-puzzle consiste en un tablero de 3x3 con ocho fichas numeradas y un espacio
 - **Prueba de meta**: El array está ordenado de izquierda a derecha y de arriba a abajo.
 - **Función coste de camino**: Sumar número de movimientos desde el estado inicial hasta llegar al final.
 
+### TGR 2, Formas de búsqueda
+
+Estrategia básica 2 
+
+```
+1. S_actual = S_inicial 
+   E = ∅
+2. Prueba de meta 
+   Si S_actual es meta → Fin 
+   Si no → Seguir 
+3. a = siguiente acción aplicable a S_actual 
+4. Contains(E, a)
+   Si -> volver a 3
+   No -> S_actual = a;
+   Insert(a, E)
+5. Volver a 2
+```
+
+![image-20230214094054637](img/TGR1SI/image-20230214094054637.png)
+
+El algoritmo no da la solución porque queda en el mismo estado, muere de inanición al solo poder hacer 4 movimientos.
+
+| Paso | S~actual~                         | Siguiente acción |
+| ---- | --------------------------------- | ---------------- |
+| 1    | [1 2 _]<br />[3 4 5]<br />[6 7 8] | Arriba           |
+| 2    | [1 2 5]<br />[3 4 _]<br />[6 7 8] | Abajo            |
+| 3    | [1 2 _]<br />[3 4 5]<br />[6 7 8] | Derecha          |
+| 4    | [1 _ 2]<br />[3 4 5]<br />[6 7 8] | Izquierda        |
+| 5    | [1 2 _]<br />[3 4 5]<br />[6 7 8] |                  |
 
 
 
+![image-20230214100015745](img/TGR1SI/image-20230214100015745.png)
+
+| Paso |             S~actual~             | Acciones -> Estados                                          |
+| :--: | :-------------------------------: | :----------------------------------------------------------- |
+|  1   | [1 2 _]<br />[3 4 5]<br />[6 7 8] | Arriba -> 1 2<br />Derecha ->1 3                             |
+|  2   | [1 2 5]<br />[3 4 _]<br />[6 7 8] | Arriba -> 1 2 4 <br />Abajo -> 1 2 1, No se puede hacer porque repetimos estado<br />Derecha -> 1 2 5 |
+|  3   | [1 _ 2]<br />[3 4 5]<br />[6 7 8] | Arriba -> 1 3 6<br />Izquierda -> 1 3 1, No se puede realizar porque repetimos estado<br />Derecha -> 1 3 7 |
+|  4   | [1 2 5]<br />[3 4 8]<br />[6 7 _] | Abajo -> 1 2 4 2, No se puede realizar porque repetimos estado<br />Derecha -> 1 2 4 ... |
+|  5   | [1 2 5]<br />[3 _ 4]<br />[6 7 8] | Arriba -> 1 2 5 ...<br />Abajo -> 1 2 5 ...<br />Izquierda -> 1 2 5 ...<br />Derecha -> 1 2 5 2, No se puede realizar porque repetimos estado |
+|  6   | [1 4 2]<br />[3 _ 5]<br />[6 7 8] | Arriba -> 1 3 6 ...<br />Abajo -> 1 3 6 3, No se puede realizar porque repetimos estado<br />Izquierda -> 1 3 6 ...<br />Derecha -> 1 3 6 ... |
+|  7   | [_ 1 2]<br />[3 4 5]<br />[6 7 8] | Solución: 1 3 7                                              |
 
 
 
@@ -52,7 +92,7 @@ Mapa de Rumanía simplificado, que incluye los costes de los tramos individuales
 - **Modelo de transiciones**
 
 | Acción            | Precondición     | Resultado                                                    |
-| ----------------- | ---------------- | ------------------------------------------------------------ |
+| :------------------ | ---------------- | ------------------------------------------------------------ |
 | Moverse a un nodo | Nodo no visitado | (nodoOrigen, nodoDestino, peso + pesoAcumulado)<br />nodoOrigen = nodoDestino<br />nodoDestino = nuevoNodoDestino |
 
 - **Prueba de meta**: Comprobar que nodoDestino sea el nodo deseado.
