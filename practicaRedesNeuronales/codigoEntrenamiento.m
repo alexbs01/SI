@@ -4,79 +4,73 @@ clear;
 input = csvread('input.csv')'; % Al final se ponde el apostrofe para hacer la traspuesta
 target = csvread('output.csv')';
 
-% Inicializamos los arrays que almacenarán la precisión de la red en la
-% iteración i
+% Inicializamos variables
 precisionEntrenamiento = [];
 precisionValidacion = [];
 precisionTest = [];
 best_epoch = [];
-media = [];
-desviacionTipica = [];
-neuronas = 1;
+neuronasPrimerBucle = [2];
+neuronasSegundoBucle = [2 2];
+iteraciones = 10;
 
-% Creamos un bucle for que haga 50 iteraciones
-for i=1:50,
-    rna = patternnet([neuronas]); % Crea una RN X neuronas en la capa oculta, más columnas -> más capas
+% Creamos un bucle for que haga N iteraciones de la que se seleccionará la mejor
+for i = 1 : iteraciones
+    rna = patternnet(neuronasPrimerBucle); % Crea una RN con X capas ocultas y N neuronas en cada capa
     rna.trainParam.showWindow = false; % Establecemos que no se muestre la ventana de entrenamiento
-    [rna, tr] = train(rna, input, target); % Entrena el modelo
+    [rna, tr] = train(rna, input, target); % Entrenamos el modelo
     best_epoch(end + 1) = tr.best_epoch; % Almacena la mejor época del entrenamiento
     setasOutput = sim(rna, input); % Simula la salida de la red neuronal en el estado que dio mejores resultados
-    precisionEntrenamiento(end+1) = 1-confusion(target(:,tr.trainInd), setasOutput(:,tr.trainInd));
-    precisionValidacion(end+1) = 1-confusion(target(:,tr.valInd),setasOutput(:,tr.valInd));
-    precisionTest(end+1) = 1-confusion(target(:,tr.testInd), setasOutput(:,tr.testInd));
+    precisionEntrenamiento(end + 1) = 1 - confusion(target(:, tr.trainInd), setasOutput(:, tr.trainInd));
+    precisionValidacion(end + 1) = 1 - confusion(target(:, tr.valInd),setasOutput(:, tr.valInd));
+    precisionTest(end + 1) = 1 - confusion(target(:, tr.testInd), setasOutput(:, tr.testInd));
 end;
 
-media(end + 1) = mean(precisionTest);
-desviacionTipica(end + 1) = std(precisionTest);
+% Seleccionamos la iteración del bucle con mejor precision
 iteracionElegida = find(precisionValidacion == max(precisionValidacion), 1, 'first');
-% fprintf("Número de capas ocultas: %d\n" + ...
-%         "Número de neuronas en la o las capas ocultas: %d\n", rna.numLayers - 1, neuronas);
-% fprintf("Iteración con mejor precisión en validación: %d\n", iteracionElegida);
-% fprintf("Mejor época de la iteración: %d\n", best_epoch(iteracionElegida));
-% fprintf("Precisión del entrenamiento: %f\n", precisionEntrenamiento(iteracionElegida));
-% fprintf("Precisión de la validación: %f\n", precisionValidacion(iteracionElegida));
-% fprintf("Precisión de los test: %f\n", precisionTest(iteracionElegida));
-% fprintf("Media global de acierto: %f\n" + ...
-%         "Desviación típica global: %f\n\n", media(1), desviacionTipica(1));
 
-fprintf("NumsOcultas | NumNeur | Iter mejor prec vali | Mejor epoca | Prec entren | Prec valid | Prec test | Media    | Desvi\n");
-fprintf("\t%d \t\t| \t%d\t  | \t\t%d\t\t\t | \t\t%d\t   |   %f  | %f   | %f  | %f | %f \n", ...
-    rna.numLayers - 1, ...
-    neuronas, ...
-    iteracionElegida, ...
-    best_epoch(iteracionElegida), ...
-    precisionEntrenamiento(iteracionElegida), ...
-    precisionValidacion(iteracionElegida), ...
-    precisionTest(iteracionElegida), ...
-    media(1), ...
-    desviacionTipica(1));
+% Mostramos datos
+cabeceraTabla()
+crearTabla(rna, sum(neuronasPrimerBucle), iteracionElegida, best_epoch, precisionEntrenamiento, precisionValidacion, precisionTest)
 
-
+% Reseteamos los valores de los arrays
 precisionEntrenamiento = [];
 precisionValidacion = [];
 precisionTest = [];
+best_epoch = [];
 
-for i=1:50,
-    rna = patternnet([neuronas neuronas]); % Crea una RN X neuronas en la capa oculta, más columnas -> más capas
-    rna.trainParam.showWindow = false; % Establecemos que no se muestre la ventana de entrenamiento
-    [rna tr] = train(rna, input, target); % Entrena el modelo
-    setasOutput = sim(rna, input); % Simula la salida de la red neuronal
-    precisionEntrenamiento(end+1) = 1-confusion(target(:,tr.trainInd), setasOutput(:,tr.trainInd));
-    precisionValidacion(end+1) = 1-confusion(target(:,tr.valInd),setasOutput(:,tr.valInd));
-    precisionTest(end+1) = 1-confusion(target(:,tr.testInd), setasOutput(:,tr.testInd));
+% Repetimos pero con una segunda red neuronal
+for i = 1 : iteraciones
+    rna = patternnet(neuronasSegundoBucle);
+    rna.trainParam.showWindow = false;
+    [rna, tr] = train(rna, input, target);
+    best_epoch(end + 1) = tr.best_epoch;
+    setasOutput = sim(rna, input);
+    precisionEntrenamiento(end + 1) = 1 - confusion(target(:, tr.trainInd), setasOutput(:, tr.trainInd));
+    precisionValidacion(end + 1) = 1 - confusion(target(:, tr.valInd),setasOutput(:, tr.valInd));
+    precisionTest(end + 1) = 1 - confusion(target(:, tr.testInd), setasOutput(:, tr.testInd));
 end;
 
-media(end + 1) = mean(precisionTest);
-desviacionTipica(end + 1) = std(precisionTest);
 iteracionElegida = find(precisionValidacion == max(precisionValidacion), 1, 'first');
-fprintf("\t%d \t\t| \t%d\t  | \t\t%d\t\t\t | \t\t%d\t   |   %f  | %f   | %f  | %f | %f \n\n", ...
+
+crearTabla(rna, sum(neuronasSegundoBucle), iteracionElegida, best_epoch, precisionEntrenamiento, precisionValidacion, precisionTest)
+
+% ##############################################################################
+
+% Funciones para la creación de las tablas
+
+function cabeceraTabla()
+    fprintf("NumsOcultas | NumNeur | Iter mejor prec vali | Mejor epoca | Prec entren | Prec valid | Prec test | Media    | Desvi\n");
+end
+
+function crearTabla(rna, neuronas, iter, best_epoch, precisionEntrenamiento, precisionValidacion, precisionTest)
+    fprintf("\t%d \t\t| \t%d\t  | \t\t%d\t\t\t | \t\t%d\t   |   %f  | %f   | %f  | %f | %f \n", ...
     rna.numLayers - 1, ...
     neuronas, ...
-    iteracionElegida, ...
-    best_epoch(iteracionElegida), ...
-    precisionEntrenamiento(iteracionElegida), ...
-    precisionValidacion(iteracionElegida), ...
-    precisionTest(iteracionElegida), ...
-    media(2), ...
-    desviacionTipica(2));
-
+    iter, ...
+    best_epoch(iter), ...
+    precisionEntrenamiento(iter), ...
+    precisionValidacion(iter), ...
+    precisionTest(iter), ...
+    mean(precisionTest), ...
+    std(precisionTest));
+end
