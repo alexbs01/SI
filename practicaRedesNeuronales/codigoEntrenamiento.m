@@ -11,18 +11,20 @@ precisionTest = [];
 best_epoch = [];
 neuronasPrimerBucle = [2];
 neuronasSegundoBucle = [2 2];
-iteraciones = 10;
+iteraciones = 50;
 
 % Creamos un bucle for que haga N iteraciones de la que se seleccionará la mejor
 for i = 1 : iteraciones
     rna = patternnet(neuronasPrimerBucle); % Crea una RN con X capas ocultas y N neuronas en cada capa
     rna.trainParam.showWindow = false; % Establecemos que no se muestre la ventana de entrenamiento
     [rna, tr] = train(rna, input, target); % Entrenamos el modelo
+
     best_epoch(end + 1) = tr.best_epoch; % Almacena la mejor época del entrenamiento
     setasOutput = sim(rna, input); % Simula la salida de la red neuronal en el estado que dio mejores resultados
+
     precisionEntrenamiento(end + 1) = 1 - confusion(target(:, tr.trainInd), setasOutput(:, tr.trainInd));
-    precisionValidacion(end + 1) = 1 - confusion(target(:, tr.valInd),setasOutput(:, tr.valInd));
-    precisionTest(end + 1) = 1 - confusion(target(:, tr.testInd), setasOutput(:, tr.testInd));
+    precisionValidacion(end + 1)    = 1 - confusion(target(:, tr.valInd),setasOutput(:, tr.valInd));
+    precisionTest(end + 1)          = 1 - confusion(target(:, tr.testInd), setasOutput(:, tr.testInd));
 end;
 
 % Seleccionamos la iteración del bucle con mejor precision
@@ -43,11 +45,13 @@ for i = 1 : iteraciones
     rna = patternnet(neuronasSegundoBucle);
     rna.trainParam.showWindow = false;
     [rna, tr] = train(rna, input, target);
+
     best_epoch(end + 1) = tr.best_epoch;
     setasOutput = sim(rna, input);
+    
     precisionEntrenamiento(end + 1) = 1 - confusion(target(:, tr.trainInd), setasOutput(:, tr.trainInd));
-    precisionValidacion(end + 1) = 1 - confusion(target(:, tr.valInd),setasOutput(:, tr.valInd));
-    precisionTest(end + 1) = 1 - confusion(target(:, tr.testInd), setasOutput(:, tr.testInd));
+    precisionValidacion(end + 1)    = 1 - confusion(target(:, tr.valInd),setasOutput(:, tr.valInd));
+    precisionTest(end + 1)          = 1 - confusion(target(:, tr.testInd), setasOutput(:, tr.testInd));
 end;
 
 iteracionElegida = find(precisionValidacion == max(precisionValidacion), 1, 'first');
